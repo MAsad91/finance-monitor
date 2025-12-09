@@ -13,7 +13,7 @@ const initialState: AuthState = {
   user: null,
   token: null,
   isAuthenticated: false,
-  isLoading: true, // Start as loading to show loader while checking session
+  isLoading: false, // Start as false, will be set to true when checking session or performing auth actions
   error: null,
 };
 
