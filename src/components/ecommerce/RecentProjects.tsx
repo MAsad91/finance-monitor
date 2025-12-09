@@ -6,21 +6,12 @@ import {
   TableRow,
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
-import { useEffect, useState } from "react";
-import { dashboardApi } from "@/lib/api/dashboard";
+import { DashboardData } from "@/lib/api/dashboard";
 import { useCurrency } from "@/context/CurrencyContext";
-import CircularLoader from "@/components/ui/loader/CircularLoader";
 
-interface Project {
-  id: string;
-  name: string;
-  amount: number;
-  currency: string;
-  status: string;
-  date: string;
-  platform: string;
+interface RecentProjectsProps {
+  dashboardData: DashboardData;
 }
-
 
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
@@ -31,22 +22,9 @@ const formatDate = (dateString: string): string => {
   });
 };
 
-export default function RecentProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { formatCurrency, convertCurrency } = useCurrency();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const result = await dashboardApi.getDashboardData();
-      if (result.data) {
-        setProjects(result.data.recentProjects);
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+export default function RecentProjects({ dashboardData }: RecentProjectsProps) {
+  const { formatCurrency } = useCurrency();
+  const projects = dashboardData.recentProjects;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -62,16 +40,6 @@ export default function RecentProjects() {
         return "warning";
     }
   };
-
-  if (loading) {
-    return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-        <div className="flex items-center justify-center py-12">
-          <CircularLoader text="Loading projects..." />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">

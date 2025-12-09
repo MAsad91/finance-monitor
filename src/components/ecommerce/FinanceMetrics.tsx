@@ -1,47 +1,17 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Badge from "../ui/badge/Badge";
 import { ArrowDownIcon, ArrowUpIcon, DollarLineIcon, AlertIcon, ShootingStarIcon, TaskIcon } from "@/icons";
-import { dashboardApi, DashboardMetrics } from "@/lib/api/dashboard";
+import { DashboardData } from "@/lib/api/dashboard";
 import { useCurrency } from "@/context/CurrencyContext";
-import CircularLoader from "@/components/ui/loader/CircularLoader";
 
-export const FinanceMetrics = () => {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+interface FinanceMetricsProps {
+  dashboardData: DashboardData;
+}
+
+export const FinanceMetrics = ({ dashboardData }: FinanceMetricsProps) => {
   const { formatCurrency } = useCurrency();
-
-  useEffect(() => {
-    const fetchMetrics = async () => {
-      setLoading(true);
-      const result = await dashboardApi.getDashboardData();
-      if (result.data) {
-        setMetrics(result.data.metrics);
-      }
-      setLoading(false);
-    };
-    fetchMetrics();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-        <div className="col-span-2 flex items-center justify-center rounded-2xl border border-gray-200 bg-white p-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <CircularLoader text="Loading metrics..." />
-        </div>
-      </div>
-    );
-  }
-
-  if (!metrics) {
-    return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-        <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Failed to load metrics</p>
-        </div>
-      </div>
-    );
-  }
+  const metrics = dashboardData.metrics;
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">

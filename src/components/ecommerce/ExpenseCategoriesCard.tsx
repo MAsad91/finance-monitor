@@ -1,29 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MoreDotIcon } from "@/icons";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { dashboardApi } from "@/lib/api/dashboard";
+import { DashboardData } from "@/lib/api/dashboard";
 import { useCurrency } from "@/context/CurrencyContext";
-import CircularLoader from "@/components/ui/loader/CircularLoader";
 
-export default function ExpenseCategoriesCard() {
-  const [categoryBreakdown, setCategoryBreakdown] = useState<{ [key: string]: number }>({});
-  const [loading, setLoading] = useState(true);
+interface ExpenseCategoriesCardProps {
+  dashboardData: DashboardData;
+}
+
+export default function ExpenseCategoriesCard({ dashboardData }: ExpenseCategoriesCardProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { formatCurrency, convertCurrency } = useCurrency();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const result = await dashboardApi.getDashboardData();
-      if (result.data) {
-        setCategoryBreakdown(result.data.categoryBreakdown);
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+  const categoryBreakdown = dashboardData.categoryBreakdown;
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -41,16 +31,6 @@ export default function ExpenseCategoriesCard() {
   const topCategories = Object.entries(categoryBreakdown)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
-
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">
-        <div className="flex items-center justify-center py-12">
-          <CircularLoader text="Loading categories..." />
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] sm:p-6">

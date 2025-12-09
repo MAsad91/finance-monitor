@@ -3,41 +3,25 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { MoreDotIcon } from "@/icons";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { dashboardApi } from "@/lib/api/dashboard";
+import { DashboardData } from "@/lib/api/dashboard";
 import { useCurrency } from "@/context/CurrencyContext";
-import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function MonthlyBudget() {
-  const [budgetProgress, setBudgetProgress] = useState(0);
-  const [currentMonth, setCurrentMonth] = useState<{
-    revenue: number;
-    expenses: number;
-    budgetTarget: number;
-    budgetProgress: number;
-  } | null>(null);
-  const [loading, setLoading] = useState(true);
+interface MonthlyBudgetProps {
+  dashboardData: DashboardData;
+}
+
+export default function MonthlyBudget({ dashboardData }: MonthlyBudgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { formatCurrency } = useCurrency();
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const result = await dashboardApi.getDashboardData();
-      if (result.data) {
-        setCurrentMonth(result.data.currentMonth);
-        setBudgetProgress(result.data.currentMonth.budgetProgress);
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, []);
+  const currentMonth = dashboardData.currentMonth;
+  const budgetProgress = currentMonth.budgetProgress;
 
   const series = [Math.min(budgetProgress, 100)];
   const options: ApexOptions = {
@@ -98,22 +82,9 @@ export default function MonthlyBudget() {
 
 
   const getProgressChange = () => {
-    if (!currentMonth) return 0;
     // Calculate percentage change (simplified - could compare with previous month)
     return 10; // Placeholder
   };
-
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]">
-        <div className="px-5 pt-5 bg-white shadow-default rounded-2xl pb-11 dark:bg-gray-900 sm:px-6 sm:pt-6">
-          <div className="flex items-center justify-center py-12">
-            <CircularLoader text="Loading budget..." />
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-gray-100 dark:border-gray-800 dark:bg-white/[0.03]">
@@ -168,11 +139,9 @@ export default function MonthlyBudget() {
           </span>
         </div>
         <p className="mx-auto mt-10 w-full max-w-[380px] text-center text-sm text-gray-500 sm:text-base">
-          {currentMonth && currentMonth.revenue >= currentMonth.budgetTarget
+          {currentMonth.revenue >= currentMonth.budgetTarget
             ? `You've reached your budget target! Revenue: ${formatCurrency(currentMonth.revenue, "inr")}`
-            : currentMonth
-            ? `Current revenue: ${formatCurrency(currentMonth.revenue, "inr")}. Target: ${formatCurrency(currentMonth.budgetTarget, "inr")}. Keep up the good work!`
-            : "No budget data available"}
+            : `Current revenue: ${formatCurrency(currentMonth.revenue, "inr")}. Target: ${formatCurrency(currentMonth.budgetTarget, "inr")}. Keep up the good work!`}
         </p>
       </div>
 
@@ -182,7 +151,7 @@ export default function MonthlyBudget() {
             Target
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            {currentMonth ? formatCurrency(currentMonth.budgetTarget, "inr") : formatCurrency(0, "inr")}
+            {formatCurrency(currentMonth.budgetTarget, "inr")}
             <svg
               width="16"
               height="16"
@@ -207,7 +176,7 @@ export default function MonthlyBudget() {
             Revenue
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            {currentMonth ? formatCurrency(currentMonth.revenue, "inr") : formatCurrency(0, "inr")}
+            {formatCurrency(currentMonth.revenue, "inr")}
             <svg
               width="16"
               height="16"
@@ -232,7 +201,7 @@ export default function MonthlyBudget() {
             Expenses
           </p>
           <p className="flex items-center justify-center gap-1 text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
-            {currentMonth ? formatCurrency(currentMonth.expenses, "inr") : formatCurrency(0, "inr")}
+            {formatCurrency(currentMonth.expenses, "inr")}
             <svg
               width="16"
               height="16"

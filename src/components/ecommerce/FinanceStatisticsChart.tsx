@@ -1,10 +1,9 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { dashboardApi } from "@/lib/api/dashboard";
+import { DashboardData } from "@/lib/api/dashboard";
 import { useCurrency } from "@/context/CurrencyContext";
-import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
@@ -13,34 +12,29 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 
 type Period = "weekly" | "monthly" | "quarterly" | "annual";
 
-export default function FinanceStatisticsChart() {
-  const [revenueData, setRevenueData] = useState<number[]>([]);
-  const [expenseData, setExpenseData] = useState<number[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [period, setPeriod] = useState<Period>("monthly");
-  const [loading, setLoading] = useState(true);
+interface FinanceStatisticsChartProps {
+  dashboardData: DashboardData;
+  period: Period;
+  onPeriodChange: (period: Period) => void;
+}
+
+export default function FinanceStatisticsChart({ dashboardData, period, onPeriodChange }: FinanceStatisticsChartProps) {
   const { currency, convertCurrency, getCurrencySymbol } = useCurrency();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const result = await dashboardApi.getDashboardData(period);
-      if (result.data) {
-        // Convert data from INR to selected currency
-        const convertedRevenue = result.data.monthlyRevenue.map(amount => 
-          convertCurrency(amount, "inr", currency)
-        );
-        const convertedExpenses = result.data.monthlyExpenses.map(amount => 
-          convertCurrency(amount, "inr", currency)
-        );
-        setRevenueData(convertedRevenue);
-        setExpenseData(convertedExpenses);
-        setCategories(result.data.categories || []);
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, [period, currency, convertCurrency]);
+  // Convert data from INR to selected currency
+  const revenueData = useMemo(() => {
+    return dashboardData.monthlyRevenue.map(amount => 
+      convertCurrency(amount, "inr", currency)
+    );
+  }, [dashboardData.monthlyRevenue, currency, convertCurrency]);
+
+  const expenseData = useMemo(() => {
+    return dashboardData.monthlyExpenses.map(amount => 
+      convertCurrency(amount, "inr", currency)
+    );
+  }, [dashboardData.monthlyExpenses, currency, convertCurrency]);
+
+  const categories = dashboardData.categories || [];
 
   const options: ApexOptions = {
     legend: {
@@ -168,16 +162,6 @@ export default function FinanceStatisticsChart() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="rounded-2xl border border-gray-200 bg-white px-5 pb-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
-        <div className="flex items-center justify-center py-12">
-          <CircularLoader text="Loading statistics..." />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-2xl border border-gray-200 bg-white px-5 pb-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
@@ -192,7 +176,7 @@ export default function FinanceStatisticsChart() {
         <div className="flex items-start w-full gap-3 sm:justify-end">
           <div className="flex items-center gap-2 rounded-lg border border-gray-300 bg-white dark:border-gray-700 dark:bg-gray-800">
             <button
-              onClick={() => setPeriod("weekly")}
+              onClick={() => onPeriodChange("weekly")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 period === "weekly"
                   ? "bg-brand-500 text-white"
@@ -202,7 +186,7 @@ export default function FinanceStatisticsChart() {
               Weekly
             </button>
             <button
-              onClick={() => setPeriod("monthly")}
+              onClick={() => onPeriodChange("monthly")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 period === "monthly"
                   ? "bg-brand-500 text-white"
@@ -212,7 +196,7 @@ export default function FinanceStatisticsChart() {
               Monthly
             </button>
             <button
-              onClick={() => setPeriod("quarterly")}
+              onClick={() => onPeriodChange("quarterly")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 period === "quarterly"
                   ? "bg-brand-500 text-white"
@@ -222,7 +206,7 @@ export default function FinanceStatisticsChart() {
               Quarterly
             </button>
             <button
-              onClick={() => setPeriod("annual")}
+              onClick={() => onPeriodChange("annual")}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                 period === "annual"
                   ? "bg-brand-500 text-white"

@@ -3,38 +3,30 @@ import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { MoreDotIcon } from "@/icons";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { dashboardApi } from "@/lib/api/dashboard";
+import { DashboardData } from "@/lib/api/dashboard";
 import { useCurrency } from "@/context/CurrencyContext";
-import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 // Dynamically import the ReactApexChart component
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-export default function MonthlyRevenueChart() {
-  const [monthlyRevenue, setMonthlyRevenue] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
+interface MonthlyRevenueChartProps {
+  dashboardData: DashboardData;
+}
+
+export default function MonthlyRevenueChart({ dashboardData }: MonthlyRevenueChartProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { currency, convertCurrency, getCurrencySymbol } = useCurrency();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const result = await dashboardApi.getDashboardData();
-      if (result.data) {
-        // Convert revenue data from INR to selected currency
-        const convertedRevenue = result.data.monthlyRevenue.map(amount => 
-          convertCurrency(amount, "inr", currency)
-        );
-        setMonthlyRevenue(convertedRevenue);
-      }
-      setLoading(false);
-    };
-    fetchData();
-  }, [currency, convertCurrency]);
+  // Convert revenue data from INR to selected currency
+  const monthlyRevenue = useMemo(() => {
+    return dashboardData.monthlyRevenue.map(amount => 
+      convertCurrency(amount, "inr", currency)
+    );
+  }, [dashboardData.monthlyRevenue, currency, convertCurrency]);
 
   const options: ApexOptions = {
     colors: ["#465fff"],
@@ -137,16 +129,6 @@ export default function MonthlyRevenueChart() {
 
   function closeDropdown() {
     setIsOpen(false);
-  }
-
-  if (loading) {
-    return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-5 pt-5 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6 sm:pt-6">
-        <div className="flex items-center justify-center py-12">
-          <CircularLoader text="Loading revenue chart..." />
-        </div>
-      </div>
-    );
   }
 
   return (
