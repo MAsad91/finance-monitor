@@ -19,6 +19,7 @@ import { projectsApi } from "@/lib/api/projects";
 import { partnersApi } from "@/lib/api/partners";
 import { platformSettingsApi, PlatformSettings } from "@/lib/api/platformSettings";
 import { BadgeColor } from "@/components/ui/badge/Badge";
+import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function ProjectsPage() {
 
   // Fetch projects and platform settings on mount
   useEffect(() => {
-    fetchProjects();
+    fetchProjects(true); // Show loader on initial load
     fetchPlatformSettings();
   }, []);
 
@@ -84,21 +85,29 @@ export default function ProjectsPage() {
     }
   };
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (showLoader = false) => {
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
       const { data, error } = await projectsApi.getAll();
       if (error) {
         console.error("Error fetching projects:", error);
-        alert("Failed to load projects. Please try again.");
+        if (showLoader) {
+          alert("Failed to load projects. Please try again.");
+        }
       } else {
         setProjects(data || []);
       }
     } catch (error) {
       console.error("Error fetching projects:", error);
-      alert("Failed to load projects. Please try again.");
+      if (showLoader) {
+        alert("Failed to load projects. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
@@ -295,7 +304,7 @@ export default function ProjectsPage() {
       } else {
         resetForm();
         addModal.closeModal();
-        fetchProjects(); // Refresh the list
+        fetchProjects(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error creating project:", error);
@@ -342,7 +351,7 @@ export default function ProjectsPage() {
       } else {
         resetForm();
         editModal.closeModal();
-        fetchProjects(); // Refresh the list
+        fetchProjects(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error updating project:", error);
@@ -360,7 +369,7 @@ export default function ProjectsPage() {
       } else {
         resetForm();
         deleteModal.closeModal();
-        fetchProjects(); // Refresh the list
+        fetchProjects(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error deleting project:", error);
@@ -433,7 +442,7 @@ export default function ProjectsPage() {
         } else {
           resetPartnerForm();
           partnerModal.closeModal();
-          fetchProjects(); // Refresh the list
+          fetchProjects(false); // Don't show loader on refresh after action
         }
       } catch (error) {
         console.error("Error adding all partners:", error);
@@ -497,7 +506,7 @@ export default function ProjectsPage() {
       } else {
         resetPartnerForm();
         partnerModal.closeModal();
-        fetchProjects(); // Refresh the list
+        fetchProjects(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error updating partners:", error);
@@ -530,7 +539,7 @@ export default function ProjectsPage() {
       if (error) {
         alert(`Failed to delete partner(s): ${error}`);
       } else {
-        fetchProjects(); // Refresh the list
+        fetchProjects(false); // Don't show loader on refresh after action
         // Close the modal if it's open
         if (partnersViewModal.isOpen) {
           partnersViewModal.closeModal();
@@ -586,10 +595,7 @@ export default function ProjectsPage() {
       <div>
         <PageBreadcrumb pageTitle="Projects" />
         <div className="mt-6 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading projects...</p>
-          </div>
+          <CircularLoader text="Loading projects..." />
         </div>
       </div>
     );
@@ -610,9 +616,10 @@ export default function ProjectsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <button
+            <Button 
+              size="sm" 
+              variant="outline"
               onClick={platformSettingsModal.openModal}
-              className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-sm font-medium text-gray-700 ring-1 ring-inset ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03] dark:hover:text-gray-300"
               title="Platform Settings"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -630,7 +637,7 @@ export default function ProjectsPage() {
                 />
               </svg>
               Settings
-            </button>
+            </Button>
             <Button size="sm" onClick={handleOpenAdd}>
               <svg
                 className="mr-2 h-4 w-4"
@@ -682,6 +689,7 @@ export default function ProjectsPage() {
         onSubmit={handleEditProject}
         platformSettings={platformSettings}
         onPlatformChange={handlePlatformChange}
+        projectId={selectedProject?.id}
       />
 
       <DeleteProjectModal
@@ -714,7 +722,7 @@ export default function ProjectsPage() {
               if (error) {
                 alert(`Failed to update charity setting: ${error}`);
               } else {
-                fetchProjects(); // Refresh to get updated calculations
+                fetchProjects(false); // Don't show loader on refresh after action
               }
             } catch (error) {
               console.error("Error updating charity setting:", error);
@@ -748,7 +756,7 @@ export default function ProjectsPage() {
           if (selectedProject) {
             await handleDeletePartner(selectedProject, partnerIndex);
             // Keep modal open after delete to show updated list
-            fetchProjects();
+            fetchProjects(false); // Don't show loader on refresh after action
           }
         }}
       />

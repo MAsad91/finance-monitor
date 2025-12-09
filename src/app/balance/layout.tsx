@@ -7,6 +7,7 @@ import Backdrop from "@/layout/Backdrop";
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 
 export default function BalanceLayout({
   children,
@@ -45,16 +46,18 @@ export default function BalanceLayout({
   }
 
   return (
-    <div className="min-h-screen xl:flex">
-      <AppSidebar />
-      <Backdrop />
-      <div
-        className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
-      >
-        <AppHeader />
-        <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
+    <CurrencyProvider>
+      <div className="min-h-screen xl:flex">
+        <AppSidebar />
+        <Backdrop />
+        <div
+          className={`flex-1 transition-all  duration-300 ease-in-out ${mainContentMargin}`}
+        >
+          <AppHeader />
+          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
+        </div>
       </div>
-    </div>
+    </CurrencyProvider>
   );
 }
 

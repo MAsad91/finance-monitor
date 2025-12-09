@@ -70,9 +70,15 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        // Handle 401 Unauthorized - redirect to login immediately
+        // Handle 401 Unauthorized - token expired or invalid
         if (response.status === 401) {
-          handleUnauthorized();
+          // Check if it's a token expiration error
+          const errorMessage = data?.error || "";
+          if (errorMessage.includes("expired") || errorMessage.includes("Invalid or expired token") || errorMessage.includes("Not authenticated")) {
+            handleUnauthorized();
+          } else {
+            handleUnauthorized();
+          }
         }
         
         return {

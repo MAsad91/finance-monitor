@@ -44,7 +44,7 @@ export default function ProjectsList({
           <TableRow>
             <TableCell
               isHeader
-              className="py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 w-[250px] max-w-[250px]"
+              className="py-3 text-start text-xs font-medium text-gray-500 dark:text-gray-400 w-[150px] max-w-[150px]"
             >
               Project Title
             </TableCell>
@@ -118,14 +118,19 @@ export default function ProjectsList({
           ) : (
             projects.map((project) => (
               <TableRow key={project.id}>
-                <TableCell className="py-3 w-[250px] max-w-[250px]">
-                  <button
-                    onClick={() => onViewDetails(project)}
-                    className="text-sm font-medium text-gray-800 dark:text-white/90 hover:text-brand-500 dark:hover:text-brand-400 block w-full text-left truncate"
+                <TableCell className="py-3 w-[150px] max-w-[150px]">
+                  <div
+                    className="w-full"
                     title={project.projectTitle}
                   >
-                    {project.projectTitle}
-                  </button>
+                    <button
+                      onClick={() => onViewDetails(project)}
+                      className="text-sm font-medium text-gray-800 dark:text-white/90 hover:text-brand-500 dark:hover:text-brand-400 block w-full text-left truncate"
+                      title={project.projectTitle}
+                    >
+                      {project.projectTitle}
+                    </button>
+                  </div>
                 </TableCell>
                 <TableCell className="py-3 text-sm text-gray-500 dark:text-gray-400">
                   {formatPrice(project.projectPrice, project.priceType)}
@@ -251,7 +256,7 @@ function PartnersCell({
   onViewPartners: (project: Project) => void;
 }) {
   const totalShare = project.partners.reduce((sum, p) => sum + p.sharePercentage, 0);
-  const maxVisible = 2;
+  const maxVisible = 1;
   const hasMorePartners = project.partners.length > maxVisible;
 
   return (

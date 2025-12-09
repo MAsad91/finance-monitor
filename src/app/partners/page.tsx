@@ -12,6 +12,7 @@ import PartnerDetailModal from "./components/PartnerDetailModal";
 import { partnersApi, Partner } from "@/lib/api/partners";
 import { projectsApi } from "@/lib/api/projects";
 import { Project } from "@/app/projects/types";
+import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 // Exchange rates relative to INR (same as in balance page)
 const EXCHANGE_RATES: { [key: string]: number } = {
@@ -95,12 +96,14 @@ export default function PartnersPage() {
   });
 
   useEffect(() => {
-    fetchData();
+    fetchData(true); // Show loader on initial load
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (showLoader = false) => {
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
       const [partnersResult, projectsResult] = await Promise.all([
         partnersApi.getAll(),
         projectsApi.getAll(),
@@ -108,7 +111,9 @@ export default function PartnersPage() {
 
       if (partnersResult.error) {
         console.error("Error fetching partners:", partnersResult.error);
-        alert("Failed to load partners. Please try again.");
+        if (showLoader) {
+          alert("Failed to load partners. Please try again.");
+        }
       } else {
         const partnersData = partnersResult.data || [];
         
@@ -157,9 +162,13 @@ export default function PartnersPage() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      alert("Failed to load data. Please try again.");
+      if (showLoader) {
+        alert("Failed to load data. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
@@ -235,7 +244,7 @@ export default function PartnersPage() {
       } else if (data) {
         resetForm();
         addModal.closeModal();
-        fetchData(); // Refresh the list
+        fetchData(false); // Don't show loader on refresh after action
       } else {
         console.error("Partner creation returned no data and no error");
         alert("Failed to create partner. Please try again.");
@@ -273,7 +282,7 @@ export default function PartnersPage() {
         resetForm();
         editModal.closeModal();
         detailModal.closeModal(); // Close detail modal if open
-        fetchData();
+        fetchData(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error updating partner:", error);
@@ -294,7 +303,7 @@ export default function PartnersPage() {
         resetForm();
         deleteModal.closeModal();
         detailModal.closeModal(); // Close detail modal if open
-        fetchData();
+        fetchData(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error deleting partner:", error);
@@ -311,10 +320,7 @@ export default function PartnersPage() {
       <div>
         <PageBreadcrumb pageTitle="Partners" />
         <div className="mt-6 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading partners...</p>
-          </div>
+          <CircularLoader text="Loading partners..." />
         </div>
       </div>
     );

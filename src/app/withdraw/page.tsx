@@ -18,20 +18,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import Badge from "@/components/ui/badge/Badge";
+import { useCurrency } from "@/context/CurrencyContext";
+import CircularLoader from "@/components/ui/loader/CircularLoader";
 
-const formatPrice = (price: number, type: string) => {
-  const currencySymbols: { [key: string]: string } = {
-    inr: "₹",
-    dollars: "$",
-    euro: "€",
-    pkr: "₨",
-    gbp: "£",
-    cad: "C$",
-    aud: "A$",
-  };
-  const symbol = currencySymbols[type.toLowerCase()] || "$";
-  return `${symbol}${price.toLocaleString()}`;
-};
+// Removed formatPrice - using formatCurrency from context instead
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -54,6 +44,7 @@ export default function WithdrawPage() {
   const [loading, setLoading] = useState(true);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<Withdrawal | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const { currency, setCurrency, formatCurrency, CURRENCY_NAMES } = useCurrency();
 
   const addModal = useModal();
   const editModal = useModal();
@@ -76,12 +67,14 @@ export default function WithdrawPage() {
   });
 
   useEffect(() => {
-    fetchData();
+    fetchData(true); // Show loader on initial load
   }, []);
 
-  const fetchData = async () => {
+  const fetchData = async (showLoader = false) => {
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
       const [withdrawalsResult, projectsResult] = await Promise.all([
         withdrawalsApi.getAll(),
         projectsApi.getAll(),
@@ -100,9 +93,13 @@ export default function WithdrawPage() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      alert("Failed to load data. Please try again.");
+      if (showLoader) {
+        alert("Failed to load data. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
@@ -198,7 +195,7 @@ export default function WithdrawPage() {
       } else {
         resetForm();
         addModal.closeModal();
-        fetchData();
+        fetchData(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error creating withdrawal:", error);
@@ -235,7 +232,7 @@ export default function WithdrawPage() {
       } else {
         resetForm();
         editModal.closeModal();
-        fetchData();
+        fetchData(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error updating withdrawal:", error);
@@ -255,7 +252,7 @@ export default function WithdrawPage() {
       } else {
         resetForm();
         deleteModal.closeModal();
-        fetchData();
+        fetchData(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error deleting withdrawal:", error);
@@ -275,10 +272,7 @@ export default function WithdrawPage() {
       <div>
         <PageBreadcrumb pageTitle="Withdraw" />
         <div className="mt-6 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading withdrawals...</p>
-          </div>
+          <CircularLoader text="Loading withdrawals..." />
         </div>
       </div>
     );
@@ -288,7 +282,27 @@ export default function WithdrawPage() {
     <div>
       <PageBreadcrumb pageTitle="Withdraw" />
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
+      {/* Currency Selector at top right */}
+      <div className="mt-6 mb-6 flex justify-end">
+        <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-4 py-2 dark:border-gray-800 dark:bg-white/[0.03]">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            Currency:
+          </label>
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className="h-9 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+          >
+            {Object.entries(CURRENCY_NAMES).map(([key, name]) => (
+              <option key={key} value={key}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
@@ -380,7 +394,7 @@ export default function WithdrawPage() {
                   <TableRow key={withdrawal.id}>
                     <TableCell className="py-3">
                       <p className="text-sm font-semibold text-gray-800 dark:text-white/90">
-                        {formatPrice(withdrawal.amount, withdrawal.currency)}
+                        {formatCurrency(withdrawal.amount, withdrawal.currency)}
                       </p>
                     </TableCell>
                     <TableCell className="py-3 text-sm text-gray-500 dark:text-gray-400">
@@ -486,7 +500,14 @@ export default function WithdrawPage() {
               disabled={submitting}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Add Withdrawal
+              {submitting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent"></div>
+                  Adding...
+                </>
+              ) : (
+                "Add Withdrawal"
+              )}
             </button>
           </div>
         </form>
@@ -528,7 +549,14 @@ export default function WithdrawPage() {
               disabled={submitting}
               className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Save Changes
+              {submitting ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-solid border-white border-r-transparent"></div>
+                  Updating...
+                </>
+              ) : (
+                "Save Changes"
+              )}
             </button>
           </div>
         </form>
@@ -547,7 +575,7 @@ export default function WithdrawPage() {
           <p className="mb-6 text-sm leading-6 text-gray-500 dark:text-gray-400">
             Are you sure you want to delete the withdrawal of{" "}
             <span className="font-semibold text-gray-800 dark:text-white/90">
-              {selectedWithdrawal ? formatPrice(selectedWithdrawal.amount, selectedWithdrawal.currency) : ""}
+              {selectedWithdrawal ? formatCurrency(selectedWithdrawal.amount, selectedWithdrawal.currency) : ""}
             </span>
             ? This action cannot be undone.
           </p>

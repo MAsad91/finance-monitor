@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import ExpenseForm from "./ExpenseForm";
 import { ExpenseFormData } from "../types";
@@ -14,6 +14,7 @@ interface EditExpenseModalProps {
   projects: Project[];
   onProjectSelectionChange: (ids: string[]) => void;
   onSubmit: () => void;
+  expenseId?: string;
 }
 
 export default function EditExpenseModal({
@@ -24,7 +25,32 @@ export default function EditExpenseModal({
   projects,
   onProjectSelectionChange,
   onSubmit,
+  expenseId,
 }: EditExpenseModalProps) {
+  const [localFormData, setLocalFormData] = useState<ExpenseFormData>(formData);
+
+  useEffect(() => {
+    if (isOpen && formData) {
+      setLocalFormData(formData);
+    }
+  }, [isOpen, formData]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setLocalFormData((prev) => {
+      const { name, value, type } = e.target;
+      if (type === "checkbox") {
+        return { ...prev, [name]: (e.target as HTMLInputElement).checked };
+      }
+      return { ...prev, [name]: value };
+    });
+    onInputChange(e);
+  };
+
+  const handleProjectSelectionChange = (ids: string[]) => {
+    setLocalFormData((prev) => ({ ...prev, projectIds: ids }));
+    onProjectSelectionChange(ids);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -44,10 +70,11 @@ export default function EditExpenseModal({
 
         <div className="flex-1 overflow-y-auto pr-2">
           <ExpenseForm
-            formData={formData}
-            onInputChange={onInputChange}
+            key={expenseId || formData.name}
+            formData={localFormData}
+            onInputChange={handleInputChange}
             projects={projects}
-            onProjectSelectionChange={onProjectSelectionChange}
+            onProjectSelectionChange={handleProjectSelectionChange}
           />
         </div>
 

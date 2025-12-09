@@ -11,6 +11,7 @@ import { useModal } from "@/hooks/useModal";
 import EditProjectModal from "../components/EditProjectModal";
 import DeleteProjectModal from "../components/DeleteProjectModal";
 import { ProjectFormData } from "../components/ProjectForm";
+import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 const formatPrice = (price: number, type: string) => {
   const currencySymbols: { [key: string]: string } = {
@@ -180,10 +181,7 @@ export default function ProjectDetailPage() {
       <div>
         <PageBreadcrumb pageTitle="Loading..." />
         <div className="mt-6 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading project...</p>
-          </div>
+          <CircularLoader text="Loading project..." />
         </div>
       </div>
     );

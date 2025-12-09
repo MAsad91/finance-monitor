@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     // Ensure user has all required fields
     const userId = userObj.id || userObj._id?.toString() || "";
 
-    // Create JWT token
+    // Create JWT token - expires in 3 days (72 hours)
     const token = jwt.sign(
       {
         id: userId,
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
         modules: userObj.modules || { freelance: false, household: false },
       },
       process.env.NEXTAUTH_SECRET || "fallback-secret-change-in-production",
-      { expiresIn: "30d" }
+      { expiresIn: "3d" }
     );
 
     // Create response with user data
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax" as const,
-      maxAge: 60 * 60 * 24 * 30, // 30 days
+      maxAge: 60 * 60 * 24 * 3, // 3 days (72 hours)
       path: "/",
     };
     

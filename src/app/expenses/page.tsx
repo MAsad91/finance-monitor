@@ -13,6 +13,7 @@ import { Expense, ExpenseFormData } from "./types";
 import { expensesApi } from "@/lib/api/expenses";
 import { projectsApi } from "@/lib/api/projects";
 import { Project } from "@/app/projects/types";
+import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 const formatPrice = (price: number, type: string) => {
   const currencySymbols: { [key: string]: string } = {
@@ -68,25 +69,33 @@ export default function ExpensesPage() {
   });
 
   useEffect(() => {
-    fetchExpenses();
+    fetchExpenses(true); // Show loader on initial load
     fetchProjects();
   }, []);
 
-  const fetchExpenses = async () => {
+  const fetchExpenses = async (showLoader = false) => {
     try {
-      setLoading(true);
+      if (showLoader) {
+        setLoading(true);
+      }
       const { data, error } = await expensesApi.getAll();
       if (error) {
         console.error("Error fetching expenses:", error);
-        alert("Failed to load expenses. Please try again.");
+        if (showLoader) {
+          alert("Failed to load expenses. Please try again.");
+        }
       } else {
         setExpenses(data || []);
       }
     } catch (error) {
       console.error("Error fetching expenses:", error);
-      alert("Failed to load expenses. Please try again.");
+      if (showLoader) {
+        alert("Failed to load expenses. Please try again.");
+      }
     } finally {
-      setLoading(false);
+      if (showLoader) {
+        setLoading(false);
+      }
     }
   };
 
@@ -193,7 +202,7 @@ export default function ExpensesPage() {
       } else {
         resetForm();
         addModal.closeModal();
-        fetchExpenses();
+        fetchExpenses(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error creating expense:", error);
@@ -232,7 +241,7 @@ export default function ExpensesPage() {
       } else {
         resetForm();
         editModal.closeModal();
-        fetchExpenses();
+        fetchExpenses(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error updating expense:", error);
@@ -252,7 +261,7 @@ export default function ExpensesPage() {
       } else {
         resetForm();
         deleteModal.closeModal();
-        fetchExpenses();
+        fetchExpenses(false); // Don't show loader on refresh after action
       }
     } catch (error) {
       console.error("Error deleting expense:", error);
@@ -265,10 +274,7 @@ export default function ExpensesPage() {
       <div>
         <PageBreadcrumb pageTitle="Expenses" />
         <div className="mt-6 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading expenses...</p>
-          </div>
+          <CircularLoader text="Loading expenses..." />
         </div>
       </div>
     );
@@ -335,6 +341,7 @@ export default function ExpensesPage() {
         projects={projects}
         onProjectSelectionChange={handleProjectSelectionChange}
         onSubmit={handleEditExpense}
+        expenseId={selectedExpense?.id}
       />
 
       <DeleteExpenseModal

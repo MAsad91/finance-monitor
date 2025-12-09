@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import Button from "@/components/ui/button/Button";
 import ProjectForm, { ProjectFormData } from "./ProjectForm";
@@ -14,6 +14,7 @@ interface EditProjectModalProps {
   onSubmit: () => void;
   platformSettings?: PlatformSettings[];
   onPlatformChange?: (platformName: string, feePercentage: number) => void;
+  projectId?: string;
 }
 
 export default function EditProjectModal({
@@ -24,7 +25,45 @@ export default function EditProjectModal({
   onSubmit,
   platformSettings,
   onPlatformChange,
+  projectId,
 }: EditProjectModalProps) {
+  const [localFormData, setLocalFormData] = useState<ProjectFormData>(formData);
+
+  useEffect(() => {
+    if (isOpen && formData) {
+      setLocalFormData(formData);
+    }
+  }, [isOpen, formData]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+      const checked = (e.target as HTMLInputElement).checked;
+      setLocalFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+      // Handle nested withdrawal fees fields
+      if (name.startsWith("withdrawalFees.")) {
+        const parts = name.split(".");
+        if (parts.length === 3) {
+          const [_, feeType, field] = parts;
+          setLocalFormData((prev) => ({
+            ...prev,
+            withdrawalFees: {
+              ...prev.withdrawalFees,
+              [feeType]: {
+                ...prev.withdrawalFees[feeType as keyof typeof prev.withdrawalFees],
+                [field]: value,
+              },
+            },
+          }));
+        }
+      } else {
+        setLocalFormData((prev) => ({ ...prev, [name]: value }));
+      }
+    }
+    onInputChange(e);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -42,8 +81,9 @@ export default function EditProjectModal({
         </h4>
 
         <ProjectForm 
-          formData={formData} 
-          onInputChange={onInputChange}
+          key={projectId || formData.projectTitle}
+          formData={localFormData} 
+          onInputChange={handleInputChange}
           platformSettings={platformSettings}
           onPlatformChange={onPlatformChange}
         />

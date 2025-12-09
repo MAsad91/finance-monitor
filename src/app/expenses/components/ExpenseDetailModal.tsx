@@ -121,7 +121,7 @@ export default function ExpenseDetailModal({
             <select
               value={displayCurrency}
               onChange={(e) => setDisplayCurrency(e.target.value)}
-              className="h-9 rounded-lg border border-gray-300 bg-transparent px-3 py-1.5 text-sm shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
+              className="h-9 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800"
             >
               {Object.entries(CURRENCY_NAMES).map(([key, name]) => (
                 <option key={key} value={key}>

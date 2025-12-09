@@ -163,10 +163,12 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isAuthenticated = false;
         state.user = null;
+        state.token = null;
+        state.error = "Session expired. Please login again.";
         // Clear auth token from localStorage
         if (typeof window !== "undefined") {
           localStorage.removeItem("auth-token");
-          // Don't redirect here - let the layout components handle redirects
+          // Don't redirect here - let the AuthInitializer handle redirects
           // This prevents redirect loops and allows showing loaders
         }
       });

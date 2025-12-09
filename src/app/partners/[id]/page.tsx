@@ -10,6 +10,7 @@ import { partnersApi } from "@/lib/api/partners";
 import { useModal } from "@/hooks/useModal";
 import EditPartnerModal from "../components/EditPartnerModal";
 import DeletePartnerModal from "../components/DeletePartnerModal";
+import CircularLoader from "@/components/ui/loader/CircularLoader";
 
 const getStatusColor = (status: string) => {
   return status === "Active" ? "success" : "warning";
@@ -132,10 +133,7 @@ export default function PartnerDetailPage() {
       <div>
         <PageBreadcrumb pageTitle="Partner Details" />
         <div className="mt-6 flex items-center justify-center rounded-2xl border border-gray-200 bg-white px-4 py-12 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading partner details...</p>
-          </div>
+          <CircularLoader text="Loading partner details..." />
         </div>
       </div>
     );
