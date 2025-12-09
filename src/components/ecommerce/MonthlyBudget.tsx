@@ -21,7 +21,7 @@ export default function MonthlyBudget({ dashboardData }: MonthlyBudgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { formatCurrency } = useCurrency();
   const currentMonth = dashboardData.currentMonth;
-  const budgetProgress = currentMonth.budgetProgress;
+  const budgetProgress = Math.round(currentMonth.budgetProgress);
 
   const series = [Math.min(budgetProgress, 100)];
   const options: ApexOptions = {
@@ -56,7 +56,7 @@ export default function MonthlyBudget({ dashboardData }: MonthlyBudgetProps) {
             offsetY: -40,
             color: "#1D2939",
             formatter: function (val) {
-              return val + "%";
+              return Math.round(val) + "%";
             },
           },
         },
